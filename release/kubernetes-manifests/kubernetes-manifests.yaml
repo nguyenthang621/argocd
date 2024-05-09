@@ -43,7 +43,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: nthang621/configservice
+          image: nthang621/configservice:latest
           ports:
             - containerPort: 8888
           env:
@@ -59,11 +59,18 @@ spec:
           readinessProbe:
             initialDelaySeconds: 20
             periodSeconds: 15
+            httpGet:
+              path: /healthz
+              port: 8888
             grpc:
               port: 8888
           livenessProbe:
             initialDelaySeconds: 20
             periodSeconds: 15
+            httpGet:
+              path: /healthz
+              port: 8443
+              scheme: HTTPS
             grpc:
               port: 8888
 ---
