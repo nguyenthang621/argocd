@@ -93,3 +93,86 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: configservice
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: accountservice
+  labels:
+    app: accountservice
+spec:
+  selector:
+    matchLabels:
+      app: accountservice
+  template:
+    metadata:
+      labels:
+        app: accountservice
+    spec:
+      serviceAccountName: accountservice
+      terminationGracePeriodSeconds: 5
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: server
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+          image: nthang621/accountservice:latest
+          ports:
+            - containerPort: 8087
+          env:
+            - name: PORT
+              value: "8087"
+          resources:
+            requests:
+              cpu: 200m
+              memory: 180Mi
+            limits:
+              cpu: 300m
+              memory: 300Mi
+          readinessProbe:
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            httpGet:
+              path: /healthz
+              port: 8087
+            grpc:
+              port: 8087
+          livenessProbe:
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            httpGet:
+              path: /healthz
+              port: 8443
+              scheme: HTTPS
+            grpc:
+              port: 8087
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: accountservice
+  labels:
+    app: accountservice
+spec:
+  type: ClusterIP
+  selector:
+    app: accountservice
+  ports:
+    - name: grpc
+      port: 8087
+      targetPort: 8087
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: accountservice
