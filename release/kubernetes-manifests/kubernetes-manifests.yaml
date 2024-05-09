@@ -43,7 +43,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: configservice
+          image: nthang621/configservice
           ports:
             - containerPort: 8888
           env:
