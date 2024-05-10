@@ -44,7 +44,7 @@ spec:
               drop:
                 - ALL
             privileged: false
-            readOnlyRootFilesystem: true
+            # readOnlyRootFilesystem: true
           image: nthang621/configservice:latest
           ports:
             - containerPort: 8888
@@ -131,7 +131,7 @@ spec:
               drop:
                 - ALL
             privileged: false
-            readOnlyRootFilesystem: true
+            # readOnlyRootFilesystem: true
           image: nthang621/accountservice:0.0.1
           ports:
             - containerPort: 8087
@@ -216,7 +216,7 @@ spec:
               drop:
                 - ALL
             privileged: false
-            readOnlyRootFilesystem: true
+            # readOnlyRootFilesystem: true
           image: nthang621/discoveryservice:0.0.1
           ports:
             - containerPort: 8761
