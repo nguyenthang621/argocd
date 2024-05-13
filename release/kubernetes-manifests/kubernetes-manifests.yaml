@@ -271,7 +271,7 @@ kind: ServiceAccount
 metadata:
   name: discoveryservice
 
-# ----------------------------------------------
+# ------------------------authservice----------------------
 
 ---
 apiVersion: apps/v1
@@ -311,16 +311,16 @@ spec:
           ports:
             - containerPort: 8082
           env:
-            - name: PORT
-              value: "8082"
-            - name: DB_USERNAME
-              value: root
             - name: MYSQL_ROOT_PASSWORD
               value: abcd456789
-            - name: DB_HOST
-              value: mysql
-            - name: DB_NAME
-              value: microservice_app
+            # - name: PORT
+            #   value: "8082"
+            # - name: DB_USERNAME
+            #   value: root
+            # - name: DB_HOST
+            #   value: mysql
+            # - name: DB_NAME
+            #   value: microservice_app
           resources:
             requests:
               cpu: 200m
