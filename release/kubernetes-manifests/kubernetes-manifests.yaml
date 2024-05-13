@@ -313,14 +313,14 @@ spec:
           env:
             - name: MYSQL_ROOT_PASSWORD
               value: abcd456789
-            # - name: PORT
-            #   value: "8082"
-            # - name: DB_USERNAME
-            #   value: root
-            # - name: DB_HOST
-            #   value: mysql
-            # - name: DB_NAME
-            #   value: microservice_app
+            - name: PORT
+              value: "8082"
+            - name: DB_USERNAME
+              value: root
+            - name: DB_HOST
+              value: mysql
+            - name: DB_NAME
+              value: microservice_app
           resources:
             requests:
               cpu: 200m
