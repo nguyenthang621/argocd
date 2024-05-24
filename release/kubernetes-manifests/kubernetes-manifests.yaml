@@ -371,7 +371,10 @@ spec:
   type: ClusterIP
   ports:
     - port: 3306
+      targetPort: 3306
+      name: mysql
   # clusterIP: None
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -402,6 +405,7 @@ spec:
               mountPath: /var/lib/mysql
             - name: mysql-config-volume
               mountPath: /etc/mysql/mysql.conf.d
+              subPath: mysqld.cnf
       volumes:
         - name: mysql-persistent-storage
           persistentVolumeClaim:
@@ -410,14 +414,11 @@ spec:
           configMap:
             name: mysql-config
 
-# ----------PersistentVolume---------------
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: mysql-pv-volume
-  # labels:
-  #   type: local
 spec:
   storageClassName: manual
   capacity:
@@ -426,6 +427,7 @@ spec:
     - ReadWriteOnce
   hostPath:
     path: "/mnt/data"
+
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
