@@ -356,25 +356,14 @@ kind: ConfigMap
 metadata:
   name: mysql-config
 data:
-  create-user.sql: |
+  create-user.sql: |-
     CREATE USER 'root'@'%' IDENTIFIED BY 'abcd456789';
-    GRANT ALL PRIVILEGES ON *.* TO 'root'@'%';
+    GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
+    FLUSH PRIVILEGES;
   mysqld.cnf: |
     [mysqld]
     bind-address = 0.0.0.0
 
----
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: mysql
-# spec:
-#   selector:
-#     app: mysql
-#   type: ClusterIP
-#   ports:
-#     - port: 3306
-#   # clusterIP: None
 
 ---
 apiVersion: v1
@@ -387,7 +376,44 @@ spec:
   selector:
     app: mysql
 
----
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: mysql
+# spec:
+#   selector:
+#     matchLabels:
+#       app: mysql
+#   strategy:
+#     type: Recreate
+#   template:
+#     metadata:
+#       labels:
+#         app: mysql
+#     spec:
+#       containers:
+#         - image: mysql:5.6
+#           name: mysql
+#           env:
+#             - name: MYSQL_ROOT_PASSWORD
+#               value: abcd456789
+#           ports:
+#             - containerPort: 3306
+#               name: mysql
+#           volumeMounts:
+#             - name: mysql-persistent-storage
+#               mountPath: /var/lib/mysql
+#             - name: mysql-config-volume
+#               mountPath: /etc/mysql/mysql.conf.d
+#       volumes:
+#         - name: mysql-persistent-storage
+#           persistentVolumeClaim:
+#             claimName: mysql-pv-claim
+#         - name: mysql-config-volume
+#           configMap:
+#             name: mysql-config
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -417,6 +443,8 @@ spec:
               mountPath: /var/lib/mysql
             - name: mysql-config-volume
               mountPath: /etc/mysql/mysql.conf.d
+            - name: initdb-scripts
+              mountPath: /docker-entrypoint-initdb.d
       volumes:
         - name: mysql-persistent-storage
           persistentVolumeClaim:
@@ -424,6 +452,10 @@ spec:
         - name: mysql-config-volume
           configMap:
             name: mysql-config
+        - name: initdb-scripts
+          configMap:
+            name: mysql-config
+
 
 # ----------PersistentVolume---------------
 ---
