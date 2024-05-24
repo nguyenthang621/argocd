@@ -501,7 +501,7 @@ spec:
       image: mysql:8.0.23
       env:
       - name: MYSQL_ROOT_PASSWORD
-       value: yourpassword
+       value: abcd456789
       ports:
       - containerPort: 3306
        volumeMounts:
