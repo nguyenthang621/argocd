@@ -450,4 +450,76 @@ spec:
   resources:
     requests:
       storage: 20Gi
+
+
+
+
 # ---------------------------- test mysql new -------------------
+
+
+
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+data:
+  mysqld.cnf: |
+    [mysqld]
+    bind-address = 0.0.0.0
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+spec:
+  ports:
+    - port: 3306
+    targetPort: 3306
+  selector:
+    app: mysql
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deployment
+spec:
+  replicas: 1
+  selector:
+   matchLabels:
+     app: mysql
+  template:
+   metadata:
+     labels:
+      app: mysql
+   spec:
+    containers:
+    - name: mysql
+      image: mysql:8.0.23
+      env:
+      - name: MYSQL_ROOT_PASSWORD
+       value: yourpassword
+      ports:
+      - containerPort: 3306
+       volumeMounts:
+       - name: mysql-persistent-storage
+        mountPath: /var/lib/mysql
+    volumes:
+     - name: mysql-persistent-storage
+      persistentVolumeClaim:
+      claimName: mysql-pvc
+
+# ----------PersistentVolume---------------
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+spec:
+  accessModes:
+   - ReadWriteOnce
+  resources:
+   requests:
+    storage: 1Gi
