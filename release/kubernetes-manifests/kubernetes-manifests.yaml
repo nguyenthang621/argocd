@@ -350,17 +350,17 @@ metadata:
   name: authservice
 
 # -----------------------------Database Mysql-------------------------
-# ---
-# apiVersion: v1
-# kind: ConfigMap
-# metadata:
-#   name: mysql-config
-# data:
-#   mysqld.cnf: |
-#     [mysqld]
-#     bind-address = 0.0.0.0
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+data:
+  mysqld.cnf: |
+    [mysqld]
+    bind-address = 0.0.0.0
 
-# ---
+---
 # apiVersion: v1
 # kind: Service
 # metadata:
@@ -373,196 +373,81 @@ metadata:
 #     - port: 3306
 #   # clusterIP: None
 
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: mysql
-#   labels:
-#     app: mysql
-# spec:
-#   type: ClusterIP
-#   selector:
-#     app: mysql
-#   ports:
-#     - name: grpc
-#       port: 3306
-#       targetPort: 3306
-# ---
-# apiVersion: apps/v1
-# kind: Deployment
-# metadata:
-#   name: mysql
-# spec:
-#   selector:
-#     matchLabels:
-#       app: mysql
-#   strategy:
-#     type: Recreate
-#   template:
-#     metadata:
-#       labels:
-#         app: mysql
-#     spec:
-#       containers:
-#         - image: mysql:5.6
-#           name: mysql
-#           env:
-#             - name: MYSQL_ROOT_PASSWORD
-#               value: abcd456789
-#           ports:
-#             - containerPort: 3306
-#               name: mysql
-#           volumeMounts:
-#             - name: mysql-persistent-storage
-#               mountPath: /var/lib/mysql
-#             - name: mysql-config-volume
-#               mountPath: /etc/mysql/mysql.conf.d
-#       volumes:
-#         - name: mysql-persistent-storage
-#           persistentVolumeClaim:
-#             claimName: mysql-pv-claim
-#         - name: mysql-config-volume
-#           configMap:
-#             name: mysql-config
-
-# # ----------PersistentVolume---------------
-# ---
-# apiVersion: v1
-# kind: PersistentVolume
-# metadata:
-#   name: mysql-pv-volume
-#   # labels:
-#   #   type: local
-# spec:
-#   storageClassName: manual
-#   capacity:
-#     storage: 20Gi
-#   accessModes:
-#     - ReadWriteOnce
-#   hostPath:
-#     path: "/mnt/data"
-# ---
-# apiVersion: v1
-# kind: PersistentVolumeClaim
-# metadata:
-#   name: mysql-pv-claim
-# spec:
-#   storageClassName: manual
-#   accessModes:
-#     - ReadWriteOnce
-#   resources:
-#     requests:
-#       storage: 20Gi
-
-# ---------------------------- test mysql new -------------------
-# ---
-# apiVersion: v1
-# kind: ConfigMap
-# metadata:
-#   name: mysql-config
-# data:
-#   mysqld.cnf: |
-#     [mysqld]
-#     bind-address = 0.0.0.0
----
-kind: StorageClass
-
-apiVersion: storage.k8s.io/v1
-
-metadata:
-  name: efs-sc
-
-provisioner: k8s.io/minikube-hostpath
-
-volumeBindingMode: Immediate
-
-parameters:
-  type: gp2 # This configures SSDs (recommended).
-
-allowVolumeExpansion: true
-
-reclaimPolicy: Retain
-
 ---
 apiVersion: v1
-
-kind: PersistentVolumeClaim
-
+kind: Service
 metadata:
-  name: mysql-pvc
-
+  name: mysql
 spec:
-  accessModes:
-    - ReadWriteMany
-
-  storageClassName: efs-sc
-
-  resources:
-    requests:
-      storage: 5Gi
+  ports:
+    - port: 3306
+  selector:
+    app: mysql
 
 ---
 apiVersion: apps/v1
-
 kind: Deployment
-
 metadata:
   name: mysql
-
 spec:
-  replicas: 1
-
   selector:
     matchLabels:
       app: mysql
-
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
         app: mysql
-
     spec:
       containers:
-        - name: mysql
-
-          image: mysql:5.7
-
-          securityContext:
-            runAsUser: 1000
-
-            allowPrivilegeEscalation: false
-
+        - image: mysql:5.6
+          name: mysql
           env:
             - name: MYSQL_ROOT_PASSWORD
-
               value: abcd456789
-
           ports:
             - containerPort: 3306
-
               name: mysql
-
           volumeMounts:
             - name: mysql-persistent-storage
-
               mountPath: /var/lib/mysql
+            - name: mysql-config-volume
+              mountPath: /etc/mysql/mysql.conf.d
       volumes:
         - name: mysql-persistent-storage
-
           persistentVolumeClaim:
-            claimName: mysql-pvc
+            claimName: mysql-pv-claim
+        - name: mysql-config-volume
+          configMap:
+            name: mysql-config
 
+# ----------PersistentVolume---------------
 ---
 apiVersion: v1
-
-kind: Service
-
+kind: PersistentVolume
 metadata:
-  name: mysql
-
+  name: mysql-pv-volume
+  # labels:
+  #   type: local
 spec:
-  ports:
-    - port: 3306
-
-  selector:
-    app: mysql
+  storageClassName: manual
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pv-claim
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+# ---------------------------- test mysql new -------------------
