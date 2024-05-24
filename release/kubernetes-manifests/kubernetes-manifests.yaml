@@ -356,6 +356,9 @@ kind: ConfigMap
 metadata:
   name: mysql-config
 data:
+  create-user.sql: |-
+    CREATE USER 'root'@'%' IDENTIFIED BY 'abcd456789';
+    GRANT ALL PRIVILEGES ON *.* TO 'root'@'%';
   mysqld.cnf: |
     [mysqld]
     bind-address = 0.0.0.0
