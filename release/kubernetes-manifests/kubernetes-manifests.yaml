@@ -340,7 +340,7 @@ spec:
   selector:
     app: authservice
   ports:
-    - name: grpc
+    # - name: grpc
       port: 8082
       targetPort: 8082
 ---
