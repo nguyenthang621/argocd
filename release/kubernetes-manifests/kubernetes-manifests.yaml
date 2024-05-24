@@ -455,71 +455,105 @@ data:
 #       storage: 20Gi
 
 # ---------------------------- test mysql new -------------------
-apiVersion: v1
-kind: Service
+---
+kind: StorageClass
+
+apiVersion: storage.k8s.io/v1
+
 metadata:
-  name: wordpress-mysql
-  labels:
-    app: wordpress
-spec:
-  ports:
-    - port: 3306
-  selector:
-    app: wordpress
-    tier: mysql
-  clusterIP: None
+  name: efs-sc
+
+provisioner: k8s.io/minikube-hostpath
+
+volumeBindingMode: Immediate
+
+parameters:
+  type: gp2 # This configures SSDs (recommended).
+
+allowVolumeExpansion: true
+
+reclaimPolicy: Retain
+
 ---
 apiVersion: v1
+
 kind: PersistentVolumeClaim
+
 metadata:
-  name: mysql-pv-claim
-  labels:
-    app: wordpress
+  name: mysql-pvc
+
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
+
+  storageClassName: efs-sc
+
   resources:
     requests:
-      storage: 20Gi
+      storage: 5Gi
+
 ---
-apiVersion: apps/v1 # for k8s versions before 1.9.0 use apps/v1beta2  and before 1.8.0 use extensions/v1beta1
+apiVersion: apps/v1
+
 kind: Deployment
+
 metadata:
-  name: wordpress-mysql
-  labels:
-    app: wordpress
+  name: mysql
+
 spec:
+  replicas: 1
+
   selector:
     matchLabels:
-      app: wordpress
-      tier: mysql
-  strategy:
-    type: Recreate
+      app: mysql
+
   template:
     metadata:
       labels:
-        app: wordpress
-        tier: mysql
+        app: mysql
+
     spec:
       containers:
-        - image: mysql:5.6
-          name: mysql
+        - name: mysql
+
+          image: mysql:5.7
+
+          securityContext:
+            runAsUser: 1000
+
+            allowPrivilegeEscalation: false
+
           env:
             - name: MYSQL_ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: abcd456789
-                  key: password
-          livenessProbe:
-            tcpSocket:
-              port: 3306
+
+              value: abcd456789
+
           ports:
             - containerPort: 3306
+
               name: mysql
+
           volumeMounts:
             - name: mysql-persistent-storage
+
               mountPath: /var/lib/mysql
       volumes:
         - name: mysql-persistent-storage
+
           persistentVolumeClaim:
-            claimName: mysql-pv-claim
+            claimName: mysql-pvc
+
+---
+apiVersion: v1
+
+kind: Service
+
+metadata:
+  name: mysql
+
+spec:
+  ports:
+    - port: 3306
+
+  selector:
+    app: mysql
